@@ -1,0 +1,74 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xmlns:py="http://genshi.edgewall.org/">
+  <xi:include href="admin.html" />
+  <head>
+    <title>Irker Notifications</title>
+  </head>
+  <body>
+    <h2>Manage Notifications</h2>
+        <form class="addnew" id="addnotification" method="post" action="">
+          <fieldset>
+            <legend>Subscribe users and channels for notification</legend>
+            <div class="field">
+              <label>Usernames / IRC channels:<br /><input type="text" name="subscribers" /></label>
+            </div>
+            <div class="field">
+              <label>Resource type:<br />
+                <select id="field-type" name="subs_type">
+                    <option selected="selected" value="ticket">ticket</option>
+                    <option value="wiki">wikipage</option>
+                </select>
+              </label>
+            </div>
+            <div class="field">
+              <label>Resource IDs:<br /><input type="text" name="subscriptions" /></label>
+            </div>
+            <div class="buttons">
+              <input type="submit" name="addsubs" value="${_('Add')}"/>
+            </div>
+          </fieldset>
+        </form>
+        <form class="addnew" id="removenotifications" method="post" action="">
+          <fieldset>
+            <legend>Remove notifications from user</legend>
+            <div class="field">
+              <label>Name:<br /><input type="text" name="name" /></label>
+            </div>
+            <div class="buttons">
+              <input type="submit" name="remove" value="${_('Remove')}"/>
+            </div>
+          </fieldset>
+        </form>
+    <h2>Irker Notifications</h2>
+    <form method="post">
+
+      <table class="listing" id="workflownotificationlist">
+        <thead>
+          <tr>
+            <th>Name</th><th>Description</th><th>Subscribers</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr py:for="name, subscriber in subscribers.items()">
+            <td class="name">
+              <a href="${panel_href(name)}">$name</a>
+            </td>
+            <td class="description">$subscriber.desc</td>
+            <py:choose>
+                <td py:when="subscriber.conf" class="recipients"><input type="text" id="subs" name="subscribers_${name}" size="120" value="${', '.join([s[0] for s in subscriber.subs])}" /></td>
+                <td py:otherwise="" class="recipients">The recipients of this class are restricted.</td>
+            </py:choose>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="buttons">
+        <input type="submit" name="save" value="Save changes" />
+      </div>
+    </form>
+  </body>
+</html>

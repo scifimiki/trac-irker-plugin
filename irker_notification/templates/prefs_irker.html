@@ -1,0 +1,43 @@
+<!--!  Copyright (C) 2006-2014 Edgewall Software
+
+  This software is licensed as described in the file COPYING, which
+  you should have received as part of this distribution. The terms
+  are also available at http://trac.edgewall.com/license.html.
+
+  This software consists of voluntary contributions made by many
+  individuals. For the exact contribution history, see the revision
+  history and logs, available at http://trac.edgewall.org/.
+-->
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:i18n="http://genshi.edgewall.org/i18n"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="prefs.html" />
+  <head>
+    <title>Irker settings</title>
+  </head>
+  <body>
+
+    <p py:choose="" class="hint">
+      <py:when test="req.authname == 'anonymous'">
+        This information is used to automatically populate some forms
+        on this site with your contact details.
+      </py:when>
+      <py:otherwise>
+        This information is used to associate your login name with your
+        nick name, which is used for irc notifications.
+      </py:otherwise>
+    </p>
+    <table>
+      <tr class="field">
+        <th><label for="name">IRC nick name:</label></th>
+        <td><input type="text" id="name" name="irc_nick" size="30"
+            value="${session.get('irc_nick')}" /></td>
+      </tr>
+    </table>
+
+  </body>
+</html>

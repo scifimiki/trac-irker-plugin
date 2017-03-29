@@ -8,6 +8,7 @@ setup(
     url='https://github.com/Southen/trac-irker-plugin',
     license='BSD',
     packages=['irker_notification'],
+    package_data={'irker_notification': ['templates/*']},
     classifiers=[
         'Framework :: Trac',
         'License :: OSI Approved :: BSD License',
