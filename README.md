@@ -26,7 +26,9 @@ Configuration in trac.ini:
 
 ## License
 
-Copyright (c) 2014, Sebastian Southen  
+Original work Copyright (c) 2014, Sebastian Southen
+Modified work Copyright (c) 2017, Miklos Molnar
+
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
