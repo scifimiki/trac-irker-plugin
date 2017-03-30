@@ -6,15 +6,15 @@
 #
 # This software is licensed as described in the file README.md, which
 # you should have received as part of this distribution.
-
+import pdb
 from pkg_resources import resource_filename
 from trac.admin import IAdminPanelProvider
 from trac.core import Component, ExtensionPoint, implements
 from trac.notification.model import Subscription
 from trac.util.translation import _, dgettext
 from trac.prefs.api import IPreferencePanelProvider
-from trac.prefs.web_ui import _do_save
-from trac.web.chrome import Chrome, ITemplateProvider, add_notice, add_warning
+#from trac.prefs.web_ui import _do_save
+from trac.web.chrome import Chrome, ITemplateProvider, add_notice, add_warning, web_context
 from trac.web.api import IRequestHandler
 
 from subscription import ISubscriptionInfoProvider, SubscriptionHandler
@@ -32,8 +32,33 @@ class IrkerPreferencePanel(Component):
 
     def render_preference_panel(self, req, panel):
         if req.method == 'POST':
-            _do_save(req, panel, self._form_fields)
-        return 'prefs_irker.html', {}
+            if req.args.get('unsub'):
+                sel = req.args.get('unsub')
+                sel = sel if isinstance(sel, list) else [sel]
+                SubscriptionHandler.remove_subscriptions(self.env, self.log, req.session.sid, sel)
+                add_notice(req, _("The selected subscriptions have been "
+                                  "revoked."))
+            #_do_save(req, panel, self._form_fields)
+            self._do_save(req, panel)
+        subscriptions = SubscriptionHandler.get_session_subscriptions(self.env,req.session.sid)
+        subscriptions = [(x.strip(), x.strip().split('/')[-1]) for x in subscriptions.split(',')]
+        ticket_subscriptions = sorted([(ox, '#%s'%x) for (ox, x) in subscriptions if x.isdigit()], key=lambda subs: int(subs[1].lstrip('#')))
+        page_subscriptions = sorted([(ox, x) for (ox, x) in subscriptions if not x.isdigit()])
+        subscriptions = ticket_subscriptions + page_subscriptions
+        return 'prefs_irker.html', {'subscriptions' : subscriptions, \
+                                    'context': web_context(req)
+                                    }
+
+    def _do_save(self, req, panel):
+        for field in self._form_fields:
+            val = req.args.get(field, '').strip()
+            if val:
+                    req.session[field] = val
+            elif (field in req.args or field + '_cb' in req.args) and \
+                    field in req.session:
+                del req.session[field]
+        add_notice(req, _("Your preferences have been saved."))
+        #req.redirect(req.href.prefs(panel))
     
 class IrkerAdminModule(Component):
     """Implements the admin page for workflow editing. See 'Ticket System' section."""
@@ -86,13 +111,13 @@ class IrkerAdminModule(Component):
                     updated_subs = [x.strip() for x in req.args.get('subscribers_%s' % name).split(',')]
                     unhandled_subs = updated_subs
                     prev_subs = subscriber['subs']
-                    for sub_name, sub_id in prev_subs: # iterate through previous subscriptions
-                        self.log.debug('Subscriber removed from %s: %s' % (name, sub_name))
-                        if sub_name in updated_subs: # if subscription is preserved just mark it as handled
-                            unhandled_subs.remove(sub_name)
+                    for subscriber_id, sub_id in prev_subs: # iterate through previous subscriptions
+                        self.log.debug('Subscriber removed from %s: %s' % (name, subscriber_id))
+                        if subscriber_id in updated_subs: # if subscription is preserved just mark it as handled
+                            unhandled_subs.remove(subscriber_id)
                         else: # otherwise delete subscription
                             Subscription.delete(self.env, sub_id)
-                            #TODO delete resource subscriptions
+                            SubscriptionHandler.remove_all_subscriptions(self.env,self.log,subscriber_id)
                     for sub in unhandled_subs:
                         SubscriptionHandler.add_subscription(self.env,self.log,sub,name)
             if req.args.get('remove'): # remove subscriptions from user
@@ -102,7 +127,7 @@ class IrkerAdminModule(Component):
                     subs_to_remove = Subscription.find_by_sid_and_distributor(self.env, req.args.get('name'), 1, 'irc')
                     for sub in subs_to_remove:
                         Subscription.delete(self.env, sub['id'])
-                        #TODO delete resource subscriptions
+                        SubscriptionHandler.remove_all_subscriptions(self.env,self.log,subscriber_id)
                     add_notice(req, _('Subscriptions have been removed.'))
             if req.args.get('addsubs'): # add new subscriptions
                 if len(req.args.get('subscribers')) == 0:
@@ -111,11 +136,11 @@ class IrkerAdminModule(Component):
                     new_subs = [x.strip() for x in req.args.get('subscribers').split(',')]
                     res_subscriber = subscribers['ResourceChangeIrcSubscriber']
                     current_subs = res_subscriber['subs']
-                    for sub_name in new_subs: # iterate throught new subscribers
-                        if sub_name not in [ sid for sid, id in current_subs ]: # if it is not subscribed already
-                            SubscriptionHandler.add_subscription(self.env,self.log,sub_name,'ResourceChangeIrcSubscriber')
+                    for subscriber_id in new_subs: # iterate throught new subscribers
+                        if subscriber_id not in [ sid for sid, id in current_subs ]: # if it is not subscribed already
+                            SubscriptionHandler.add_subscription(self.env,self.log,subscriber_id,'ResourceChangeIrcSubscriber')
                         # update session specific resource subscriptions
-                        session_subs = SubscriptionHandler.get_session_subscriptions(self.env,sub_name)
+                        session_subs = SubscriptionHandler.get_session_subscriptions(self.env,subscriber_id)
                         session_subs_is_empty = len(session_subs) == 0
                         existing_subscriptions = set()
                         if not session_subs_is_empty:
@@ -124,7 +149,7 @@ class IrkerAdminModule(Component):
                         if len(added_subscriptions) == 0:
                             add_warning(req, _('There were no valid resource IDs provided! Please check the resource type before submitting.'))
                         else:
-                            SubscriptionHandler.update_subscriptions(self.env,self.log,sub_name, ', '.join(list(existing_subscriptions | added_subscriptions)), session_subs_is_empty)
+                            SubscriptionHandler.update_subscriptions(self.env,self.log,subscriber_id, ', '.join(list(existing_subscriptions | added_subscriptions)), session_subs_is_empty)
                             add_notice(req, _('Subscriptions have been added.'))
                 
         data = { 'subscribers': self._get_subscription_info() }

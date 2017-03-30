@@ -6,7 +6,7 @@
 #
 # This software is licensed as described in the file README.md, which
 # you should have received as part of this distribution.
-
+import pdb
 from trac.core import Component, Interface, implements
 from trac.notification.api import  INotificationSubscriber, NotificationSystem, INotificationFormatter
 from trac.notification.mail import RecipientMatcher
@@ -135,19 +135,28 @@ class SubscriptionHandler(Component):
         logger.debug('Subscriber added to %s: %s' % (name, sub))
 
     @classmethod
-    def update_subscriptions(cls, env, logger, sub_name, updated_subscriptions, insert):
+    def update_subscriptions(cls, env, logger, sid, updated_subscriptions, insert):
+        remove_subscriptions = len(updated_subscriptions) == 0
         with env.db_transaction as db:
-            if insert:
-                db("INSERT INTO session_attribute VALUES (%s,%s,'subscriptions',%s)",
-                    (sub_name, 1, updated_subscriptions)
+            cursor = db.cursor()
+            if remove_subscriptions:
+                cursor.execute("""DELETE FROM session_attribute
+                      WHERE sid=%s AND authenticated=1 and name='subscriptions'
+                      """, (self.sid))
+                logger.debug('Subscriptions were removed for %s.' % sid)
+            elif insert:
+                cursor.execute("INSERT INTO session_attribute VALUES (%s,%s,'subscriptions',%s)",
+                    (sid, 1, updated_subscriptions)
                 )
-                logger.debug('Subscriptions were inserted into session_attribute table for %s.' % sub_name)
+                logger.debug('Subscriptions were inserted into session_attribute table for %s.' % sid)
             else:
-                db("""UPDATE session_attribute SET value=%s WHERE sid=%s and authenticated=1 and name='subscriptions'""",
-                    (updated_subscriptions, sub_name)
+                cursor.execute("""UPDATE session_attribute SET value=%s
+                      WHERE sid=%s and authenticated=1 and name='subscriptions'
+                      """,
+                    (updated_subscriptions, sid)
                    )
-                logger.debug('Subscriptions were updated for %s.' % sub_name)
-        env.invalidate_known_users_cache()
+                logger.debug('Subscriptions were updated for %s.' % sid)
+        #env.invalidate_known_users_cache()
     
     @classmethod
     def get_session_subscriptions(cls, env, sid):    
@@ -187,3 +196,23 @@ class SubscriptionHandler(Component):
         with env.db_query as db:
             result = Subscription.find_by_sids_and_class(env, ((sid, 1),), 'ResourceChangeIrcSubscriber')
             return len(result) != 0
+
+    @classmethod
+    def remove_all_subscriptions(cls, env, logger, sid):
+        session_subs = SubscriptionHandler.get_session_subscriptions(env,sid)
+        session_subs_is_empty = len(session_subs) == 0
+        if session_subs_is_empty:
+            return
+        SubscriptionHandler.update_subscriptions(env,logger,sid, '', session_subs_is_empty)
+        
+    @classmethod
+    def remove_subscriptions(cls, env, logger, sid, subs_to_remove):
+        if len(subs_to_remove) == 0:
+            return
+        session_subs = SubscriptionHandler.get_session_subscriptions(env,sid)
+        session_subs_is_empty = len(session_subs) == 0
+        existing_subscriptions = set()
+        if not session_subs_is_empty:
+            existing_subscriptions = set([x.strip() for x in session_subs.split(',')])
+        removed_subscriptions = set(subs_to_remove)
+        SubscriptionHandler.update_subscriptions(env,logger,sid, ', '.join(list(existing_subscriptions - removed_subscriptions)), session_subs_is_empty)

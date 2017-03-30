@@ -37,6 +37,15 @@
         <td><input type="text" id="name" name="irc_nick" size="30"
             value="${session.get('irc_nick')}" /></td>
       </tr>
+      <tr class="field">
+        <th><label for="name">Current subscriptions:</label></th>
+        <td>
+            <label py:for="sub_id, sub in subscriptions">
+                <input type="checkbox" name="unsub" value="${sub_id}" />
+                ${wiki_to_oneliner(context, sub) if sub else None}
+            </label>
+        </td>
+      </tr>
     </table>
 
   </body>
