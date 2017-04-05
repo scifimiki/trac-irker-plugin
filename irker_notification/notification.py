@@ -8,8 +8,8 @@
 # you should have received as part of this distribution.
 
 from trac.core import Component, implements
-from trac.notification.api import NotificationEvent, NotificationSystem, INotificationFormatter
-#from trac.ticket.api import ITicketChangeListener
+from trac.notification.api import (
+    NotificationEvent, NotificationSystem, INotificationFormatter)
 from trac.web.api import IRequestFilter, ITemplateStreamFilter
 from trac.web.chrome import add_notice
 from trac.wiki.api import IWikiChangeListener
@@ -22,6 +22,7 @@ from genshi.output import HTMLSerializer
 
 from subscription import SubscriptionHandler
 
+
 # ==================== Notification events ====================
 class WikiPageChangeEvent(NotificationEvent):
     """Represent a wiki page change `NotificationEvent`."""
@@ -32,6 +33,7 @@ class WikiPageChangeEvent(NotificationEvent):
                                                   time, author)
         self.comment = comment
         self.changes = changes or {}
+
 
 # ==================== Notification formatters ====================
 class ShortIrcNotificationFormatter(Component):
@@ -69,6 +71,7 @@ class ShortIrcNotificationFormatter(Component):
         else:
             return ' '.join(content[:length + 1].split(' ')[0:-1]) + suffix
 
+
 # ==================== Notification plugin ====================
 class IrkerNotifcationPlugin(Component):
     implements(IWikiChangeListener, ITemplateStreamFilter, IRequestFilter)
@@ -82,21 +85,24 @@ class IrkerNotifcationPlugin(Component):
             return handler
         if req.method == 'GET' and 'subscribe' in req.args:
             if req.args.get('subscribe') == 'Subscribe':
-                if not SubscriptionHandler.is_session_subscribed_for_ticket_changes(
+                if not SubscriptionHandler. \
+                    is_session_subscribed_for_ticket_changes(
                         self.env, req.session.sid):
                     SubscriptionHandler.add_subscription(
-                        self.env, self.log, req.session.sid, 'ResourceChangeIrcSubscriber')
+                        self.env, self.log, req.session.sid,
+                        'ResourceChangeIrcSubscriber')
                 prev_subs = req.session.get('subscriptions', '')
                 if len(prev_subs) == 0:
                     req.session['subscriptions'] = req.path_info
                 else:
-                    req.session['subscriptions'] = req.session['subscriptions'] + \
-                        ', %s' % req.path_info
+                    req.session['subscriptions'] = \
+                        req.session['subscriptions'] + ', %s' % req.path_info
                 req.session.save()
                 add_notice(req, _('You have subscribed successfully!'))
             else:
-                updated_subscriptions = [x.strip() for x in req.session['subscriptions'].split(
-                    ',') if not x.strip() == req.path_info]
+                updated_subscriptions = \
+                    [x.strip() for x in req.session['subscriptions'].
+                        split(',') if not x.strip() == req.path_info]
                 req.session['subscriptions'] = ', '.join(updated_subscriptions)
                 req.session.save()
                 add_notice(req, _('You have unsubscribed successfully!'))
@@ -114,12 +120,14 @@ class IrkerNotifcationPlugin(Component):
         # Applying changes on ticket.html
         if filename == 'ticket.html':
             stream = stream | Transformer(
-                'body//div[@class="trac-content "]').prepend(HTML(self._get_button_html(req)))
+                'body//div[@class="trac-content "]').\
+                prepend(HTML(self._get_button_html(req)))
             self.log.debug('#IrkerNotifcationPlugin filter_stream')
 
         if filename == 'wiki_view.html':
             stream = stream | Transformer(
-                'body//div[@id="wikipage"]').prepend(HTML(self._get_button_html(req)))
+                'body//div[@id="wikipage"]').\
+                prepend(HTML(self._get_button_html(req)))
             self.log.debug('#IrkerNotifcationPlugin filter_stream')
         return stream
 
@@ -128,7 +136,8 @@ class IrkerNotifcationPlugin(Component):
         try:
             NotificationSystem(self.env).notify(event)
         except Exception as e:
-            self.log.error("Failure sending notification when wiki page '%s' has changed: %s ",
+            self.log.error("Failure sending notification when wiki page"
+                           " '%s' has changed: %s ",
                            page.name, exception_to_unicode(e))
 
     def wiki_page_added(self, page):
@@ -148,7 +157,9 @@ class IrkerNotifcationPlugin(Component):
         """The construction of subscribe button."""
         # TODO replace with genshi builder
         button = u'''<input type="submit" name="subscribe" value="%s" title="%s" />'''
-        if SubscriptionHandler.is_session_subscribed_to(self.env, req.session.sid, req.path_info):
+        if SubscriptionHandler.\
+                is_session_subscribed_to(self.env, req.session.sid,
+                                         req.path_info):
             button = button % (_('Unsubscribe'), _(
                 'Unsubscribe from IRC notifications'))
         else:

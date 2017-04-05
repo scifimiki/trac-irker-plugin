@@ -41,7 +41,7 @@
         <th><label for="name">Current subscriptions:</label></th>
         <td>
             <label py:for="sub_id, sub in subscriptions">
-                <input type="checkbox" name="unsub" value="${sub_id}" />
+                <input type="checkbox" name="unsub" value="${sub_id}" title="Remove selected" />
                 ${wiki_to_oneliner(context, sub) if sub else None}
             </label>
         </td>

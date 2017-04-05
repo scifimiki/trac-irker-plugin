@@ -14,22 +14,26 @@ import time
 from trac.env import IEnvironmentSetupParticipant
 from trac.config import (BoolOption, ConfigurationError, IntOption, Option,
                          OrderedExtensionsOption)
-from trac.core import Component, ExtensionPoint, Interface, TracError, implements
+from trac.core import (Component, ExtensionPoint, Interface,
+                       TracError, implements)
 from trac.util.text import exception_to_unicode
 from trac.util.translation import _
-from trac.notification.api import INotificationDistributor, INotificationFormatter
-    
+from trac.notification.api import (INotificationDistributor,
+                                   INotificationFormatter)
+
+
 class IIrcAddressResolver(Interface):
         """Map sessions to irc ids."""
-    
+
         def get_target_for_session(sid, authenticated):
             """Map a session id and authenticated flag to an irc id.
-    
+
             :param sid: the session id
             :param authenticated: 1 for authenticated sessions, 0 otherwise
             :return: an irc id or `None`
             """
-        
+
+
 class SessionIrcResolver(Component):
     """Gets the email address from the user preferences / session."""
 
@@ -51,30 +55,32 @@ class SessionIrcResolver(Component):
             # if there is no match use the session id as fallback
             return sid
 
+
 class IrcDistributor(Component):
     """Distributes notification events as irc messages."""
     implements(INotificationDistributor, IEnvironmentSetupParticipant)
     host = Option('irker', 'host', 'localhost',
-        doc="Host on which the irker daemon resides.")
-    port = IntOption('irker', 'port', 6659,
-        doc="Irker listen port.")
-    target_server = Option('irker', 'target_host', 'irc://localhost/',
-        doc="IRC server URL to which notifications are to be sent.")
+                  doc="Host on which the irker daemon resides.")
+    port =\
+        IntOption('irker', 'port', 6659,
+                  doc="Irker listen port.")
+    target_server = \
+        Option('irker', 'target_host', 'irc://localhost/',
+               doc="IRC server URL to which notifications are to be sent.")
 
     formatters = ExtensionPoint(INotificationFormatter)
 
-    resolvers = OrderedExtensionsOption('notification',
-        'irc_address_resolvers', IIrcAddressResolver,
-        'SessionIrcResolver',
-        include_missing=False,
-        doc="""Comma seperated list of irc resolver components in the order
-        they will be called.  If an irc address is resolved, the remaining
-        resolvers will not be called.
-        """)
+    resolvers =\
+        OrderedExtensionsOption('notification',
+                                'irc_address_resolvers', IIrcAddressResolver,
+                                'SessionIrcResolver', include_missing=False,
+                                doc="""Comma seperated list of irc resolver
+                                components in the order they will be called.
+                                If an irc address is resolved, the remaining
+                                resolvers will not be called.
+                                """)
 
-#    def __init__(self):
-
-    # IEnvironmentSetupParticipant 
+    # IEnvironmentSetupParticipant
     def environment_created(self):
         section = 'notification-subscriber'
         if section not in self.config.sections():
@@ -91,7 +97,7 @@ class IrcDistributor(Component):
 
     def upgrade_environment(self):
         pass
-        
+
     # INotificationDistributor
     def transports(self):
         yield 'irc'
@@ -99,7 +105,8 @@ class IrcDistributor(Component):
     def distribute(self, transport, recipients, event):
         if transport != 'irc':
             return
-        self.log.debug('irc_distribute: %s / %s / %s' % (transport, event.realm, event.category))
+        self.log.debug('irc_distribute: %s / %s / %s' %
+                       (transport, event.realm, event.category))
         formats = {}
         for f in self.formatters:
             for style, realm in f.get_supported_styles(transport):
@@ -127,8 +134,9 @@ class IrcDistributor(Component):
                         status = 'authenticated' if authed else \
                                  'not authenticated'
                         self.log.debug("IrcDistributor found the target "
-                                       "'%s' for '%s (%s)' via %s", target, sid,
-                                       status, resolver.__class__.__name__)
+                                       "'%s' for '%s (%s)' via %s", target,
+                                       sid, status,
+                                       resolver.__class__.__name__)
                         break
             if target:
                 targets.setdefault(fmt, set()).add(target)
@@ -183,8 +191,9 @@ class IrcDistributor(Component):
     def _do_send(self, transport, event, message, target):
         if (not target.startswith('#')):
             target = '%s,isnick' % target
-        data = {"to": ('%s%s'%(self.target_server,target)).encode('utf-8').strip(), "privmsg": message.encode('utf-8').strip() }
-        self.log.info('Send to: %s%s'%(self.target_server,target))
+        data = {"to": ('%s%s' % (self.target_server, target)).encode('utf-8').
+                strip(), "privmsg": message.encode('utf-8').strip()}
+        self.log.info('Send to: %s%s' % (self.target_server, target))
         try:
             s = socket.create_connection((self.host, self.port))
             s.sendall(json.dumps(data))

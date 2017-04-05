@@ -24,10 +24,25 @@ Configuration in trac.ini:
     target = irc://localhost/#commits
 
 
+## Usage
+
+The nick name used in IRC can be specified in Preferences / 
+Irker Settings page. The default nick is the username (sid).
+The user can manage his/her existing subscriptions on the
+preferences page too.
+
+The authenticated user can subscribe/unsubscribe with the
+appropriate buttons, that can be found at the top right corner
+of the ticket and wiki page boxes.
+
+The trac administrator can remove all subscriptions from a user
+and create new subscriptions (even for irc channels) from the
+Admin / Irker Notifications page.
+    
 ## License
 
-Original work Copyright (c) 2014, Sebastian Southen
-Modified work Copyright (c) 2017, Miklos Molnar
+Copyright (c) 2014, Sebastian Southen
+Copyright (c) 2017, Miklos Molnar
 
 All rights reserved.
 
