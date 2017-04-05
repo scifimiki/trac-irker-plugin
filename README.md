@@ -43,19 +43,15 @@ Custom queries can be assembled by defining conditions with predefined
 elements. The targets of the notifications can also be specified.
 All settings element should start with the name of the custom query.
 Custom query has 3 required attributes:
- * description: <pre> can be specified simply by <query_name> = <desc> </pre>
- * targets: <pre>recepients listed separated by comma (ex. mmolnar, agal, 
-            #IT, #lobby) There are special targets marked with '_'
-            prefix such as _reporter, _owner, _involved
-            Example: <query_name>.targets = <target1>, <target2>, _owner</pre>
- * conditions: <pre>notification is only sent if all the listed conditions are
-               fullfilled.
-               Available condition properties: status, type, resolution, 
-               owner, reporter, involved
-               There is modifier prefix '_' which modifies the conditions
-               to check property changes rather that states.
-               Conditions should be listed in the following way:
-               <query_name>.conditions = <[_]property>:<value>;...</pre>
+ * description: can be specified simply by \<query_name\> = \<desc\> 
+ * targets: recepients listed separated by comma (ex. mmolnar, agal, #IT, #lobby) <br />
+    There are special targets marked with '_' prefix such as _reporter, _owner, _involved<br />
+    Example: \<query_name\>.targets = \<target1\>, \<target2\>, _owner
+ * conditions: Notification is only sent if all the listed conditions are fullfilled.<br />
+    Available condition properties: status, type, resolution, owner, reporter, involved<br />
+    There is modifier prefix '_' which modifies the conditions to check property changes rather that states.<br />
+    Conditions should be listed in the following way:<br />
+    \<query_name\>.conditions = \<[_]property\>:\<value\>;...
 
 Here is an exapmle how the custom query can be configured in the Trac.ini:
         
@@ -66,8 +62,7 @@ Here is an exapmle how the custom query can be configured in the Trac.ini:
     
 ## License
 
-Copyright (c) 2014, Sebastian Southen
-
+Copyright (c) 2014, Sebastian Southen<br />
 Copyright (c) 2017, Miklos Molnar
 
 All rights reserved.
