@@ -41,21 +41,21 @@ Admin / Irker Notifications page.
 
 Custom queries can be assembled by defining conditions with predefined
 elements. The targets of the notifications can also be specified.
-All settings element should start with the name of the custom query
+All settings element should start with the name of the custom query.
 Custom query has 3 required attributes:
- * description: can be specified simply by <query_name> = <desc>
- * targets: recepients listed separated by comma (ex. mmolnar, agal, 
+ * description: <pre> can be specified simply by <query_name> = <desc> </pre>
+ * targets: <pre>recepients listed separated by comma (ex. mmolnar, agal, 
             #IT, #lobby) There are special targets marked with '_'
             prefix such as _reporter, _owner, _involved
-            Example: <query_name>.targets = <target1>, <target2>, _owner
- * conditions: notification is only sent if all the listed conditions are
+            Example: <query_name>.targets = <target1>, <target2>, _owner</pre>
+ * conditions: <pre>notification is only sent if all the listed conditions are
                fullfilled.
                Available condition properties: status, type, resolution, 
                owner, reporter, involved
                There is modifier prefix '_' which modifies the conditions
                to check property changes rather that states.
                Conditions should be listed in the following way:
-               <query_name>.conditions = <[_]property>:<value>;...
+               <query_name>.conditions = <[_]property>:<value>;...</pre>
 
 Here is an exapmle how the custom query can be configured in the Trac.ini:
         
