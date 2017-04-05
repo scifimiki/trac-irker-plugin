@@ -38,10 +38,36 @@ of the ticket and wiki page boxes.
 The trac administrator can remove all subscriptions from a user
 and create new subscriptions (even for irc channels) from the
 Admin / Irker Notifications page.
+
+Custom queries can be assembled by defining conditions with predefined
+elements. The targets of the notifications can also be specified.
+All settings element should start with the name of the custom query
+Custom query has 3 required attributes:
+ * description: can be specified simply by <query_name> = <desc>
+ * targets: recepients listed separated by comma (ex. mmolnar, agal, 
+            #IT, #lobby) There are special targets marked with '_'
+            prefix such as _reporter, _owner, _involved
+            Example: <query_name>.targets = <target1>, <target2>, _owner
+ * conditions: notification is only sent if all the listed conditions are
+               fullfilled.
+               Available condition properties: status, type, resolution, 
+               owner, reporter, involved
+               There is modifier prefix '_' which modifies the conditions
+               to check property changes rather that states.
+               Conditions should be listed in the following way:
+               <query_name>.conditions = <[_]property>:<value>;...
+
+Here is an exapmle how the custom query can be configured in the Trac.ini:
+        
+        [irker-custom-queries]
+        approved_IT = Sends a notification to #IT channel if resolution changes to 'approved' for a ticket where an @it ldap group member were involved
+        approved_IT.targets = #IT
+        approved_IT.conditions = _resolution:approved;involved:@it
     
 ## License
 
 Copyright (c) 2014, Sebastian Southen
+
 Copyright (c) 2017, Miklos Molnar
 
 All rights reserved.
